@@ -1433,6 +1433,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                                          boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
     scheduler.scheduleEvery(f, nPowTargetSpacing);
 
+    // Broadcast random mempool transaction
+    CScheduler::Function fRebroadcast = boost::bind(&RebroadcastRandomMempoolTx, &IsInitialBlockDownload,
+                                         boost::ref(cs_main), boost::cref(pindexBestHeader));
+    scheduler.scheduleEvery(fRebroadcast, 1);
+
 #ifdef ENABLE_WALLET
     // Generate coins in the background
     if (pwalletMain)

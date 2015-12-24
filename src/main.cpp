@@ -1958,6 +1958,24 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     }
 }
 
+//
+// Called periodically asynchronously;
+//
+void RebroadcastRandomMempoolTx(bool (*initialDownloadCheck)(), CCriticalSection& cs, const CBlockIndex *const &bestHeader)
+{
+    if (bestHeader == NULL || initialDownloadCheck()) return;
+    LOCK(cs);
+
+    if (mempool.mapTx.empty())
+        return;
+    map<uint256, CTxMemPoolEntry>::iterator it = mempool.mapTx.lower_bound(GetRandHash());
+    if (it == mempool.mapTx.end())
+        it = mempool.mapTx.begin();
+
+    LogPrint("rebroadcastrandommempooltx", "%s: Relaying tx: %s\n", __func__, it->first.ToString());
+    RelayTransaction(it->second.GetTx());
+}
+
 static int64_t nTimeVerify = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
